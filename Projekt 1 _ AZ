@@ -1,0 +1,289 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <limits>
+
+//  KLASA PRACOWNIKA
+class Pracownik {
+public:
+    std::string typ;
+    std::string imie;
+    std::string cecha;
+
+    Pracownik() : typ(""), imie(""), cecha("") {}
+    Pracownik(const std::string& t, const std::string& i, const std::string& c)
+        : typ(t), imie(i), cecha(c) {}
+
+    void wypisz() const {
+        std::cout << "- " << typ << ": " << imie;
+        if (!cecha.empty()) {
+            std::cout << " (" << cecha << ")";
+        }
+        std::cout << "\n";
+    }
+};
+
+//  STALE EFEKTOW JAKIE DAJA PRACOWNICY
+const int EFEKT_INZ = 100;
+const int EFEKT_MAG = 80;
+const int EFEKT_MAR = 60;
+const int EFEKT_ROB = 80;
+
+//  KOSZTY WSZYSTKICH TYPOW PRACOWNIKA
+const int KOSZT_INZ = 3000;
+const int KOSZT_MAG = 2500;
+const int KOSZT_MAR = 2800;
+const int KOSZT_ROB = 2200;
+
+//  FUNKCJA KTORA DAJE MOZLIWOSC WYJSCIA W KAZDYM MOMENCIE
+bool czyWyjsc(const std::string& tekst) {
+    return tekst == "exit" || tekst == "x" || tekst == "quit";
+}
+
+//  ZATRUDNIANIE PRACOWNIKA
+void zatrudnijPracownika(std::vector<Pracownik>& pracownicy) {
+
+    std::string wybor;
+    std::cout << "\033[32m" << "Wybierz typ pracownika:\n" << "\033[0m";
+    std::cout << "inz - Inzynier " << "(" << KOSZT_INZ << ")\n";
+    std::cout << "mag - Magazynier " << "(" << KOSZT_MAG << ")\n";
+    std::cout << "rob - Robotnik " << "(" << KOSZT_ROB << ")\n";
+    std::cout << "mar - Marketer " << "(" << KOSZT_MAR << ")\n";
+    std::cout << "Wpisz wybor (lub 'exit'): ";
+    std::cin >> wybor;
+
+    if (czyWyjsc(wybor)) return;
+
+    std::string typ;
+    if (wybor == "inz") typ = "Inzynier";
+    else if (wybor == "mag") typ = "Magazynier";
+    else if (wybor == "rob") typ = "Robotnik";
+    else if (wybor == "mar") typ = "Marketer";
+    else {
+        std::cout << "Nieznany typ.\n";
+        return;
+    }
+
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    std::string imie;
+    std::cout << "Podaj imie: ";
+    std::getline(std::cin, imie);
+
+    std::string cecha;
+
+    if (typ == "Inzynier")       std::cout << "Podaj wydzial: ";
+    else if (typ == "Magazynier") std::cout << "Obsluga wozka widlowego? ";
+    else if (typ == "Robotnik")   std::cout << "Rozmiar buta: ";
+    else if (typ == "Marketer")   std::cout << "Obserwujacy: ";
+
+    std::getline(std::cin, cecha);
+
+    pracownicy.emplace_back(typ, imie, cecha);
+    std::cout << "Zatrudniono: " << typ << " " << imie << " (" << cecha << ")\n\n";
+}
+
+//  LISTOWANIE PRACOWNIKOW
+void wylistujPracownikow(const std::vector<Pracownik>& pracownicy) {
+    if (pracownicy.empty()) {
+        std::cout << "Brak pracownikow.\n\n";
+        return;
+    }
+
+    std::cout << "\033[92m" << "<<<< PRACOWNICY FIRMY >>>>\n" << "\033[0m";
+    for (const auto& p : pracownicy) p.wypisz();
+    std::cout << "\n";
+}
+
+//  KLASA KREDYTU
+struct Kredyt {
+    int kwota;    
+    int raty;     
+    int rata_kwota;  
+};
+
+//  FUNKCJA BRANIA KREDYTU
+void wezKredyt(std::vector<Kredyt>& kredyty, int& kapital) {
+    if (kredyty.size() >= 3) {
+        std::cout << "\033[31mMasz juz maksymalnie 3 kredyty!\033[0m\n\n";
+        return;
+    }
+
+    int kwota;
+    std::cout << "\033[36mPodaj kwote kredytu (min 5000, max 20000): \033[0m";
+    std::cin >> kwota;
+
+    if (kwota < 5000) {
+        std::cout << "\033[31mKwota musi byc co najmniej 5000!\033[0m\n\n";
+        return;
+    }
+    if (kwota > 20000) {
+        std::cout << "\033[31mKwota musi byc mniejsza od 20000!\033[0m\n\n";
+        return;
+    }
+
+    int raty;
+    std::cout << "\033[36mPodaj liczbe rat (min 10, max 20): \033[0m";
+    std::cin >> raty;
+
+    if (raty < 10) {
+        std::cout << "\033[31mLiczba rat musi byc co najmniej 10!\033[0m\n\n";
+        return;
+    }
+    if (raty > 20) {
+        std::cout << "\033[31mLiczba rat musi byc mniejsza od 20!\033[0m\n\n";
+        return;
+    }
+
+    // ODSETKI ZALEZNE OD ILOSCI RAT
+    double oprocentowanie = raty * 0.002;  
+
+    int odsetki = kwota * oprocentowanie;
+
+    int kwota_laczna = kwota + odsetki;
+    int rata_kwota = kwota_laczna / raty;
+
+    kredyty.push_back({ kwota_laczna, raty, rata_kwota });
+
+    kapital += kwota; // Dostajesz tylko kwotę bazową, odsetki nie są "na rękę"
+
+    std::cout << "\033[32mKredyt przyznany!\033[0m\n";
+    std::cout << "Kwota kredytu: " << kwota << " zl\n";
+    std::cout << "Odsetki: " << odsetki << " zl\n";
+    std::cout << "Kwota laczna do splaty: " << kwota_laczna << " zl\n";
+    std::cout << "Liczba rat: " << raty << "\n";
+    std::cout << "Wysokosc jednej raty: " << rata_kwota << " zl\n\n";
+}
+
+
+//  PODSUMOWANIE MIESIACA
+int policzMiesiac(const std::vector<Pracownik>& pracownicy) {
+
+    int ile_inz = 0, ile_mag = 0, ile_mar = 0, ile_rob = 0;
+
+    for (const auto& p : pracownicy) {
+        if (p.typ == "Inzynier") ile_inz++;
+        if (p.typ == "Magazynier") ile_mag++;
+        if (p.typ == "Marketer")  ile_mar++;
+        if (p.typ == "Robotnik")  ile_rob++;
+    }
+
+    int cena = ile_inz * EFEKT_INZ;
+    int pojemnosc = ile_mag * EFEKT_MAG;
+    int popyt = ile_mar * EFEKT_MAR;
+    int teoretyczna_produkcja = ile_rob * EFEKT_ROB;
+
+    int faktyczna_produkcja = std::min(pojemnosc, teoretyczna_produkcja);
+    int sprzedane = std::min(popyt, faktyczna_produkcja);
+
+    int przychod = sprzedane * cena;
+
+    int koszty =
+        ile_inz * KOSZT_INZ +
+        ile_mag * KOSZT_MAG +
+        ile_mar * KOSZT_MAR +
+        ile_rob * KOSZT_ROB;
+
+    int zysk = przychod - koszty;
+
+    std::cout << "\033[31m" << "\n<<<< PODSUMOWANIE MIESIACA >>>>\n" << "\033[0m";
+
+    std::cout << "Przychod: " << przychod << " zl\n";
+    std::cout << "Koszty   : " << koszty << " zl\n";
+
+    if (zysk >= 0)
+        std::cout << "\033[32m" << "ZYSK NETTO: + " << zysk << " zl\n\n" << "\033[0m";
+    else
+        std::cout << "\033[31m" << "STRATA NETTO: - " << -zysk << " zl\n\n" << "\033[0m";
+
+    return zysk;
+}
+
+//  GLOWNY KOD GRY
+int main() {
+    std::vector<Pracownik> pracownicy;
+
+    int kapital = 20000;      
+    int cel = 100000;         
+    bool gra_trwa = true;
+
+    std::vector<Kredyt> kredyty;
+    int maxKredytow = 3;
+
+
+    while (gra_trwa) {
+
+        std::cout << "\033[93m" << "<<<< MENU GLOWNE >>>>\n" << "\033[0m";
+        std::cout << "Wartosc spolki: \033[36m" << kapital << " zl\033[0m\n\n";
+
+        std::cout << "\033[92m" << "1. Wylistuj pracownikow\n" << "\033[0m";
+        std::cout << "\033[32m" << "2. Zatrudnij pracownika\n" << "\033[0m";
+        std::cout << "\033[36m" << "3. Wez kredyt\n" << "\033[0m";
+        std::cout << "\033[94m" << "4. Zakoncz ture (sprzedaz, wyplata pensji oraz splata raty kredytu)\n" << "\033[0m";
+        std::cout << "Wpisz numer lub 'exit': ";
+
+        std::string wybor;
+        std::cin >> wybor;
+
+        if (czyWyjsc(wybor)) {
+            std::cout << "Przerwano gre.\n";
+            break;
+        }
+
+        if (wybor == "1") {
+            wylistujPracownikow(pracownicy);
+        }
+        else if (wybor == "2") {
+            zatrudnijPracownika(pracownicy);
+        }
+        else if (wybor == "3") {
+            wezKredyt(kredyty, kapital);
+        }
+        else if (wybor == "4") {
+            int zysk = policzMiesiac(pracownicy);
+
+            int suma_rat = 0;
+
+            for (auto& k : kredyty) {
+                suma_rat += k.rata_kwota;
+                k.raty--;
+            }
+
+            kredyty.erase(
+                std::remove_if(
+                    kredyty.begin(), kredyty.end(),
+                    [](const Kredyt& k) { return k.raty <= 0; }
+                ),
+                kredyty.end()
+            );
+
+            std::cout << "\033[35mRaty kredytow do splaty: " << suma_rat << " zl\033[0m\n";
+
+            int wynik = zysk - suma_rat;
+
+            kapital += wynik;
+
+            if (wynik >= 0)
+                std::cout << "\033[32mWynik po splacie rat: +" << wynik << " zl\033[0m\n\n";
+            else
+                std::cout << "\033[31mWynik po splacie rat: " << wynik << " zl\033[0m\n\n";
+
+            if (kapital <= 0) {
+                std::cout << "\033[31mTwoja firma zbankrutowala! KONIEC GRY.\033[0m\n";
+                break;
+            }
+            if (kapital >= cel) {
+                std::cout << "\033[32mGRATULACJE! Osiagnales wartosc firmy "
+                        << kapital << " zl! WYGRANA!\033[0m\n";
+                break;
+            }
+        }
+
+        else {
+            std::cout << "Nieznana komenda.\n\n";
+        }
+    }
+
+    std::cout << "Gra zakonczona.\n";
+    return 0;
+}
